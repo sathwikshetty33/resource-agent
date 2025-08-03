@@ -135,18 +135,21 @@ Once the server is running, you can access:
 
 ```bash
 # Using curl
-curl -X POST "http://localhost:8001/search" \
-     -H "Content-Type: application/json" \
-     -d '{"query": "States of water and evaporation", "num_results": 5}'
-
+curl -X POST "http://127.0.0.1:8001/process-pdf" \
+  -H "accept: application/json" \
+  -F "file=@/path/to/your/resume.pdf"
 # Using Python requests
 import requests
 
-response = requests.post(
-    "http://localhost:8001/search",
-    json={"query": "States of water and evaporation", "num_results": 5}
-)
-results = response.json()
+url = "http://127.0.0.1:8001/process-pdf"
+file_path = "/path/to/your/resume.pdf"  # Replace with the actual PDF path
+
+with open(file_path, "rb") as f:
+    files = {"file": f}  # key must match the FastAPI endpoint param name
+    response = requests.post(url, files=files)
+
+print("Status Code:", response.status_code)
+print("Response JSON:", response.json())
 ```
 
 ### Python Integration
