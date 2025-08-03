@@ -12,6 +12,7 @@ Resource Agent is a modular Python agent designed to fetch, curate, and deliver 
 - [Installation](#installation)
 - [Configuration](#configuration)
 - [Usage](#usage)
+  - [FastAPI Web Service](#fastapi-web-service)
   - [Python Integration](#python-integration)
   - [Command Line Interface](#command-line-interface)
   - [Sample Output](#sample-output)
@@ -38,7 +39,8 @@ Resource Agent acts as your intelligent assistant for finding, filtering, and pr
 - **Topic-based Search:** Input any topic or query and receive curated, relevant online resources.
 - **Web Search Integration:** Powered by Tavily Search API, enabling real-time access to up-to-date information.
 - **Resource Curation:** Filters, ranks, and presents links, summaries, and metadata for each resource.
-- **Output Formatting:** Presents results in Python objects, Markdown, or other formats suitable for different downstream applications.
+- **FastAPI Web Service:** RESTful API endpoints for easy integration with web applications.
+- **Output Formatting:** Presents results in Python objects, JSON, Markdown, or other formats suitable for different downstream applications.
 - **Extensible Architecture:** Easily add new search engines, filtering strategies, or output formats.
 - **Error Handling:** Robust and transparent error management.
 - **Test Coverage:** Includes unit tests and integration tests for reliability.
@@ -53,15 +55,19 @@ Resource Agent acts as your intelligent assistant for finding, filtering, and pr
 - **Search API Client (`search_api.py`):** Encapsulates communication with Tavily Search or other providers.
 - **Result Processor (`processor.py`):** Cleans and ranks results, extracts metadata, and formats output.
 - **Configuration (`config.py`):** Centralizes all settings, including API keys, result limits, and filtering preferences.
+- **FastAPI App (`app.py`):** Web service providing REST API endpoints for the agent.
 - **CLI Interface (`main.py`):** Optional, provides a command-line entry point for quick queries.
 
 ### Flow Diagram
 
 ```
-User Query
+User Query (API/CLI)
    |
    v
 [Agent Core] --> [Search API Client] --> [Result Processor] --> [Output]
+   ^
+   |
+[FastAPI App] (for web service)
 ```
 Each module can be swapped or extended independently.
 
@@ -74,11 +80,30 @@ Each module can be swapped or extended independently.
 - Tavily Search API key
 
 **Steps:**
-```bash
-git clone https://github.com/sathwikshetty33/resource-agent.git
-cd resource-agent
-pip install -r requirements.txt
-```
+
+1. **Clone the repository:**
+   ```bash
+   git clone https://github.com/sathwikshetty33/resource-agent.git
+   cd resource-agent
+   ```
+
+2. **Create and activate a virtual environment:**
+   ```bash
+   # Create virtual environment
+   python -m venv venv
+   
+   # Activate virtual environment
+   # On Windows:
+   venv\Scripts\activate
+   
+   # On macOS/Linux:
+   source venv/bin/activate
+   ```
+
+3. **Install dependencies:**
+   ```bash
+   pip install -r requirements.txt
+   ```
 
 ---
 
@@ -89,6 +114,10 @@ pip install -r requirements.txt
      ```bash
      export TAVILY_API_KEY=your_api_key_here
      ```
+     - Obtain your Groq API key and set it as an environment variable:
+     ```bash
+     export GROQ_API_KEY=your_api_key_here
+     ```
 
 2. **Agent Parameters:**
    - Configure settings (e.g., number of results, filtering options) in `config.py`, or override via environment variables for deployment flexibility.
@@ -96,6 +125,48 @@ pip install -r requirements.txt
 ---
 
 ## Usage
+
+### FastAPI Web Service
+
+**Starting the FastAPI Server:**
+
+```bash
+# Start the server on default port 8000
+uvicorn app:app --reload
+
+# Start the server on custom port 8001
+uvicorn app:app --port 8001
+
+# Start with host binding for external access
+uvicorn app:app --host 0.0.0.0 --port 8001
+
+# Start in production mode (without auto-reload)
+uvicorn app:app --port 8001 --workers 4
+```
+
+**API Endpoints:**
+
+Once the server is running, you can access:
+- **Interactive API docs:** `http://localhost:8001/docs`
+- **Alternative docs:** `http://localhost:8001/redoc`
+
+**Example API Usage:**
+
+```bash
+# Using curl
+curl -X POST "http://localhost:8001/search" \
+     -H "Content-Type: application/json" \
+     -d '{"query": "States of water and evaporation", "num_results": 5}'
+
+# Using Python requests
+import requests
+
+response = requests.post(
+    "http://localhost:8001/search",
+    json={"query": "States of water and evaporation", "num_results": 5}
+)
+results = response.json()
+```
 
 ### Python Integration
 
@@ -193,6 +264,15 @@ ResourceAgent(api_key: str, config: Optional[dict] = None)
   - **num_results**: Number of resources to return per topic
   - **Returns**: Dictionary mapping topic/questions to lists of resource URLs
 
+#### FastAPI Endpoints
+
+- **POST `/search`**: Main search endpoint
+  - **Request Body**: `{"query": "search term", "num_results": 5}`
+  - **Response**: JSON object with topic mappings to resource URLs
+
+- **GET `/health`**: Health check endpoint
+  - **Response**: `{"status": "healthy"}`
+
 #### Resource Output Structure
 
 ```python
@@ -210,7 +290,7 @@ ResourceAgent(api_key: str, config: Optional[dict] = None)
 
 To support new search APIs:
 
-1. Create a new client module (e.g., `my_search_client.py`) with a method matching the Tavily client’s interface.
+1. Create a new client module (e.g., `my_search_client.py`) with a method matching the Tavily client's interface.
 2. Update `agent.py` to support provider selection via configuration.
 3. Register your client in the configuration.
 
@@ -259,6 +339,7 @@ pytest tests/
 - **API Key Security:** Never hardcode your API keys. Use environment variables.
 - **Rate Limiting:** Tavily (and other APIs) may have limits; handle `429 Too Many Requests` gracefully.
 - **Caching:** For repeated queries, implement a caching layer to reduce API usage.
+- **Virtual Environment:** Always use a virtual environment to isolate project dependencies.
 - **Extensibility:** Build new modules as plug-ins for easy future upgrades.
 - **Documentation:** Keep docstrings up-to-date for every module and method.
 
@@ -287,6 +368,8 @@ This project is distributed under the MIT License. See [LICENSE](LICENSE) for de
 ## Acknowledgements
 
 - [Tavily Search API](https://www.tavily.com/)
+- [FastAPI](https://fastapi.tiangolo.com/)
+- [Uvicorn](https://www.uvicorn.org/)
 - Open Source Python Community
 - [Your GitHub Profile](https://github.com/sathwikshetty33)
 
@@ -295,7 +378,7 @@ This project is distributed under the MIT License. See [LICENSE](LICENSE) for de
 ## FAQ
 
 **Q:** How do I increase the number of results returned?  
-**A:** Adjust the `num_results` parameter when calling `agent.search()`.
+**A:** Adjust the `num_results` parameter when calling `agent.search()` or in the API request body.
 
 **Q:** Can I customize the result filtering?  
 **A:** Yes! Edit the `processor.py` module to apply your own filters.
@@ -305,6 +388,12 @@ This project is distributed under the MIT License. See [LICENSE](LICENSE) for de
 
 **Q:** What if the Tavily API is down?  
 **A:** The agent will return an error message. You can configure a fallback provider if needed.
+
+**Q:** How do I change the FastAPI server port?  
+**A:** Use the `--port` flag with uvicorn: `uvicorn app:app --port YOUR_PORT`
+
+**Q:** Can I run the FastAPI app in production?  
+**A:** Yes! Remove the `--reload` flag and consider using multiple workers: `uvicorn app:app --port 8001 --workers 4`
 
 ---
 
