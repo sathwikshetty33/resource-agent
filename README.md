@@ -43,21 +43,6 @@ Resource Agent acts as your intelligent assistant for finding, filtering, and pr
 - **Output Formatting:** Presents results in Python objects, JSON, Markdown, or other formats suitable for different downstream applications.
 - **Extensible Architecture:** Easily add new search engines, filtering strategies, or output formats.
 - **Error Handling:** Robust and transparent error management.
-- **Test Coverage:** Includes unit tests and integration tests for reliability.
-
----
-
-## Architecture
-
-### Main Components
-
-- **Agent Core (`agent.py`):** Handles user queries, interacts with the search API, and applies filtering/curation logic.
-- **Search API Client (`search_api.py`):** Encapsulates communication with Tavily Search or other providers.
-- **Result Processor (`processor.py`):** Cleans and ranks results, extracts metadata, and formats output.
-- **Configuration (`config.py`):** Centralizes all settings, including API keys, result limits, and filtering preferences.
-- **FastAPI App (`app.py`):** Web service providing REST API endpoints for the agent.
-- **CLI Interface (`main.py`):** Optional, provides a command-line entry point for quick queries.
-
 ### Flow Diagram
 
 ```
@@ -118,10 +103,6 @@ Each module can be swapped or extended independently.
      ```bash
      export GROQ_API_KEY=your_api_key_here
      ```
-
-2. **Agent Parameters:**
-   - Configure settings (e.g., number of results, filtering options) in `config.py`, or override via environment variables for deployment flexibility.
-
 ---
 
 ## Usage
@@ -171,9 +152,9 @@ results = response.json()
 ### Python Integration
 
 ```python
-from resource_agent.agent import ResourceAgent
 
-agent = ResourceAgent(api_key="your_api_key")
+
+agent = ResourceAgent()
 results = agent.search("States of water and evaporation", num_results=5)
 
 for topic, urls in results.items():
@@ -266,7 +247,7 @@ ResourceAgent(api_key: str, config: Optional[dict] = None)
 
 #### FastAPI Endpoints
 
-- **POST `/search`**: Main search endpoint
+- **POST `/process-pdf`**: Main search endpoint while test with post send it as form data where key=file and type = file and then attach the file.
   - **Request Body**: `{"query": "search term", "num_results": 5}`
   - **Response**: JSON object with topic mappings to resource URLs
 
@@ -311,26 +292,6 @@ To support new search APIs:
 - Network/API errors return clear messages in the output: e.g., `"error": "API request failed: <reason>"`
 - Malformed queries or missing configuration result in actionable error messages.
 - Logging is supported for debugging and traceability (see `logging` section in `config.py`).
-
----
-
-## Testing
-
-### Running Tests
-
-```bash
-pytest tests/
-```
-
-### Test Coverage
-
-- **Unit tests**: Validate core agent logic, API client responses, and result processing.
-- **Integration tests**: Simulate full query-to-output workflow, including error cases.
-
-### Adding Tests
-
-- Write new tests in the `tests/` directory.
-- Use mock APIs for simulating search provider responses during CI.
 
 ---
 
@@ -385,15 +346,6 @@ This project is distributed under the MIT License. See [LICENSE](LICENSE) for de
 
 **Q:** How do I add support for another search API?  
 **A:** Implement a new search client and update the agent to use it via configuration.
-
-**Q:** What if the Tavily API is down?  
-**A:** The agent will return an error message. You can configure a fallback provider if needed.
-
-**Q:** How do I change the FastAPI server port?  
-**A:** Use the `--port` flag with uvicorn: `uvicorn app:app --port YOUR_PORT`
-
-**Q:** Can I run the FastAPI app in production?  
-**A:** Yes! Remove the `--reload` flag and consider using multiple workers: `uvicorn app:app --port 8001 --workers 4`
 
 ---
 
